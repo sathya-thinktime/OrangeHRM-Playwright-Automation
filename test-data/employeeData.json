@@ -1,0 +1,14 @@
+
+{
+    "employee": {
+        "firstName": "Sathya",
+        "middleName": "QA",
+        "lastName": "Tester",
+        "jobTitle": "QA Engineer",
+        "employmentStatus": "Full-Time"
+    },
+    "updatedEmployee": {
+    "jobTitle": "Account Assistant",
+    "employmentStatus": "Full-Time Contract"
+}
+}
