@@ -8,8 +8,8 @@ const loginData = require('../../test-data/loginData.json');
 
 test('Delete employee and verify deletion', async ({ page }) => {
 
-    // // Step 1: Load generated employee data
-    // const generatedData = require('../../test-data/generatedEmployee.json');
+    // Step 1: Load generated employee data
+    const generatedData = require('../../test-data/generatedEmployee.json');
 
     const employeeId = generatedData.employee.employeeId;
 

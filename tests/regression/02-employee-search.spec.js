@@ -8,8 +8,8 @@ const loginData = require('../../test-data/loginData.json');
 
 test('Search and verify created employee', async ({ page }) => {
 
-    // // Step 1: Load generated employee data
-    // const generatedData = require('../../test-data/generatedEmployee.json');
+    // Step 1: Load generated employee data
+    const generatedData = require('../../test-data/generatedEmployee.json');
 
     // Step 2: Initialize Page Objects
     const loginPage = new LoginPage(page);

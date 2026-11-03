@@ -10,8 +10,8 @@ const employeeData = require('../../test-data/employeeData.json');
 
 test('Update employee job details', async ({ page }) => {
 
-    // // Step 1: Load generated employee data
-    // const generatedData = require('../../test-data/generatedEmployee.json');
+    // Step 1: Load generated employee data
+    const generatedData = require('../../test-data/generatedEmployee.json');
 
     // Step 2: Initialize Page Objects
     const loginPage = new LoginPage(page);
