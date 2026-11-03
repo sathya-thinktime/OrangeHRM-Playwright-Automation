@@ -5,19 +5,21 @@ const { LoginPage } = require('../../pages/LoginPage');
 const { EmployeeListPage } = require('../../pages/EmployeeListPage');
 
 const loginData = require('../../test-data/loginData.json');
-const generatedData = require('../../test-data/generatedEmployee.json');
 
 test('Delete employee and verify deletion', async ({ page }) => {
 
-    // Step 1: Initialize Page Objects
-    const loginPage = new LoginPage(page);
-    const employeeListPage = new EmployeeListPage(page);
+    // // Step 1: Load generated employee data
+    // const generatedData = require('../../test-data/generatedEmployee.json');
 
     const employeeId = generatedData.employee.employeeId;
 
+    // Step 2: Initialize Page Objects
+    const loginPage = new LoginPage(page);
+    const employeeListPage = new EmployeeListPage(page);
+
     console.log('Employee ID to be deleted:', employeeId);
 
-    // Step 2: Login
+    // Step 3: Login
     await page.goto('/');
 
     await loginPage.login(
@@ -27,13 +29,13 @@ test('Delete employee and verify deletion', async ({ page }) => {
 
     await loginPage.verifyLoginSuccessful();
 
-    // Step 3: Navigate to Employee List
+    // Step 4: Navigate to Employee List
     await employeeListPage.navigateToEmployeeList();
 
-    // Step 4: Search employee using generated Employee ID
+    // Step 5: Search employee using generated Employee ID
     await employeeListPage.searchEmployee(employeeId);
 
-    // Step 5: Verify employee exists before deletion
+    // Step 6: Verify employee exists before deletion
     await employeeListPage.verifyEmployeeDisplayed(
         generatedData.employee.firstName,
         generatedData.employee.lastName
@@ -41,10 +43,10 @@ test('Delete employee and verify deletion', async ({ page }) => {
 
     console.log('Employee found. Proceeding with deletion.');
 
-    // Step 6: Delete employee
+    // Step 7: Delete employee
     await employeeListPage.deleteEmployee(employeeId);
 
-    // Step 7: Verify employee is deleted
+    // Step 8: Verify employee is deleted
     await employeeListPage.verifyEmployeeDeleted(employeeId);
 
     console.log(
