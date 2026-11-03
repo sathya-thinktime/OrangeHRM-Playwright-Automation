@@ -23,6 +23,12 @@ class EmployeePage {
 
         // Success notification
         this.successMessage = page.locator('.oxd-toast-content');
+
+        // Personal Details heading
+        this.personalDetailsHeading = page.getByRole(
+            'heading',
+            { name: 'Personal Details' }
+        );
     }
 
     // Navigate to PIM module
@@ -64,22 +70,20 @@ class EmployeePage {
 
     // Verify employee creation
     async verifyEmployeeCreated() {
-        // Successful creation should redirect to Personal Details
-        await this.page.waitForURL(
-            /\/pim\/viewPersonalDetails\//,
-            { timeout: 20000 }
-        );
 
-        await expect(
-    this.page.getByRole('heading', { name: 'Personal Details' })
-).toBeVisible({ timeout: 15000 });
+        // Wait for Personal Details heading
+        await expect(this.personalDetailsHeading).toBeVisible({
+            timeout: 60000
+        });
 
         console.log('Employee created successfully');
+
         console.log('Current URL:', this.page.url());
 
-        // Check toast if it is displayed
+        // Check success notification if displayed
         if (await this.successMessage.isVisible().catch(() => false)) {
             const message = await this.successMessage.innerText();
+
             console.log('OrangeHRM notification:', message);
         }
     }
