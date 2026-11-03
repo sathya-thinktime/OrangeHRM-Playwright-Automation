@@ -1,11 +1,11 @@
 
 const { test } = require('@playwright/test');
 
-const { LoginPage } = require('../pages/LoginPage');
-const { EmployeeListPage } = require('../pages/EmployeeListPage');
+const { LoginPage } = require('../../pages/LoginPage');
+const { EmployeeListPage } = require('../../pages/EmployeeListPage');
 
-const loginData = require('../test-data/loginData.json');
-const generatedData = require('../test-data/generatedEmployee.json');
+const loginData = require('../../test-data/loginData.json');
+const generatedData = require('../../test-data/generatedEmployee.json');
 
 test('Delete employee and verify deletion', async ({ page }) => {
 

@@ -13,3 +13,6 @@ playwright/.cache/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Generated test data
+test-data/generatedEmployee.json

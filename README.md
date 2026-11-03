@@ -1,39 +1,30 @@
-# OrangeHRM Employee Lifecycle Automation
+# OrangeHRM Playwright Automation
+
+An end-to-end test automation framework built using **Playwright with JavaScript** to validate the OrangeHRM application through UI and API testing.
 
 ## Project Overview
 
-This project automates the employee lifecycle workflow in the OrangeHRM application using **Playwright with JavaScript**.
+This project automates key employee management workflows in OrangeHRM, including employee creation, searching, updating, deletion, and logout functionality.
 
-It follows the Page Object Model (POM) design pattern to improve code reusability, maintainability, and test organization.
+It also integrates OrangeHRM APIs to validate employee information and job details during the employee lifecycle.
 
-The project also includes API testing using Playwright's built-in API testing capabilities.
+### Technology Stack
 
-## Tech Stack
-
-- JavaScript
-- Playwright
-- Node.js
-- npm
-- Page Object Model (POM)
-- REST API Testing
-- JSON Test Data
-- dotenv
-- Playwright HTML Reporter
-
-## Application Under Test
-
-**OrangeHRM Demo Application:**  
-https://opensource-demo.orangehrmlive.com/
-
-**API Testing:**  
-https://api.restful-api.dev/
-
-Note: API CRUD testing is performed against a separate REST API and is not directly integrated with OrangeHRM employee records.
+| Technology | Purpose |
+|---|---|
+| JavaScript | Programming language |
+| Playwright | UI automation |
+| Playwright APIRequestContext | API testing |
+| Node.js | Runtime environment |
+| npm | Package management |
+| dotenv | Environment variable management |
+| JSON | Test data management |
+| HTML Reporter | Test execution reporting |
 
 ## Project Structure
 
 ```text
-OrangeHRM-Automation/
+OrangeHRM-Playwright-Automation/
 │
 ├── pages/
 │   ├── LoginPage.js
@@ -42,12 +33,16 @@ OrangeHRM-Automation/
 │   └── EmployeeDetailsPage.js
 │
 ├── tests/
-│   ├── 01-employee-create.spec.js
-│   ├── 02-employee-search.spec.js
-│   ├── 03-employee-update.spec.js
-│   ├── 04-employee-delete.spec.js
-│   ├── 05-api.spec.js
-│   └── 06-logout.spec.js
+│   ├── e2e/
+│   │   └── employee-lifecycle.spec.js
+│   │
+│   └── regression/
+│       ├── 01-employee-create.spec.js
+│       ├── 02-employee-search.spec.js
+│       ├── 03-employee-update.spec.js
+│       ├── 04-employee-delete.spec.js
+│       ├── 05-api.spec.js
+│       └── 06-logout.spec.js
 │
 ├── test-data/
 │   ├── loginData.json
@@ -63,7 +58,6 @@ OrangeHRM-Automation/
 │
 ├── playwright.config.js
 ├── package.json
-├── package-lock.json
 ├── .env
 ├── .gitignore
 └── README.md
@@ -71,193 +65,202 @@ OrangeHRM-Automation/
 
 ## Automated Test Scenarios
 
-### UI Automation – OrangeHRM
+### 1. End-to-End Employee Lifecycle
 
-1. **Login**
-   - Login using valid credentials.
-   - Verify successful navigation to the dashboard.
+The integrated test validates the complete employee workflow in a single browser session.
 
-2. **Employee Creation**
-   - Navigate to the PIM module.
-   - Generate a unique Employee ID dynamically.
-   - Create an employee using JSON test data.
-   - Upload a profile picture.
-   - Verify successful employee creation.
+- Login to OrangeHRM.
+- Authenticate with the OrangeHRM API using OAuth 2.0.
+- Create a new employee through the UI.
+- Search for the created employee.
+- Retrieve employee details through the API.
+- Update employee job details through the UI.
+- Validate updated job details through the API.
+- Delete the employee through the UI.
+- Verify employee deletion through the API.
+- Logout and verify session invalidation.
 
-3. **Employee Search**
-   - Search for the employee using the generated Employee ID.
-   - Verify employee details in the search results.
+### 2. Regression Test Cases
 
-4. **Employee Update**
-   - Open the employee record.
-   - Update Job Title and Employment Status.
-   - Verify the updated information.
-
-5. **Employee Deletion**
-   - Search for the employee.
-   - Delete the employee record.
-   - Verify successful deletion and confirm that the employee is no longer available.
-
-6. **Logout and Session Validation**
-   - Logout from the application.
-   - Attempt to access the dashboard directly.
-   - Verify redirection to the login page.
-
-### API Automation
-
-API CRUD operations are validated using Playwright's API request functionality.
-
-| HTTP Method | Operation |
+| Test | Scenario |
 |---|---|
-| POST | Create an object |
-| GET | Retrieve an object |
-| PUT | Update an object |
-| GET | Verify updated object |
-| DELETE | Delete an object |
-| GET | Verify deletion |
+| 01 | Create a new employee |
+| 02 | Search for an existing employee |
+| 03 | Update employee details |
+| 04 | Delete an employee |
+| 05 | Validate OrangeHRM API response |
+| 06 | Logout and verify session invalidation |
 
 ## Framework Design
 
-### Page Object Model
+### Page Object Model (POM)
 
-Page classes contain locators and reusable application actions.
+The framework follows the Page Object Model design pattern.
 
-The test files interact with these page classes instead of directly maintaining locators in every test.
+- Page-specific locators and actions are maintained in separate page classes.
+- Test scripts call reusable page methods.
+- This improves maintainability, readability, and reusability.
 
-### Dynamic Test Data
+### Test Data Management
 
-Employee IDs are generated dynamically to avoid duplicate Employee IDs.
+- Login credentials and employee details are maintained in JSON files.
+- Employee IDs are generated dynamically.
+- Generated employee details are stored for use in dependent regression tests.
 
-### JSON-Based Test Data
+### API Integration
 
-Test data is maintained separately in JSON files for easier maintenance and reuse.
+OrangeHRM APIs are integrated into the employee lifecycle workflow.
 
-### API Helper
+API validations include:
 
-A reusable API helper class handles GET, POST, PUT, and DELETE requests.
+- Employee details retrieval.
+- Employee ID and employee number validation.
+- First name and last name validation.
+- Job title and employment status validation.
+- Employee deletion verification.
+
+OAuth 2.0 authorization is used to authenticate API requests.
 
 ## Prerequisites
 
-Install the following:
+Install the following before running the project:
 
 - Node.js
 - npm
-- Visual Studio Code
+- Visual Studio Code (recommended)
 - Git
+- Access to the OrangeHRM demo application
 
 ## Installation and Setup
 
-Clone the repository:
+### Step 1: Clone the repository
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone https://github.com/sathya-thinktime/OrangeHRM-Playwright-Automation.git
 ```
 
-Navigate to the project directory:
+### Step 2: Navigate to the project directory
 
 ```bash
-cd OrangeHRM-Automation
+cd OrangeHRM-Playwright-Automation
 ```
 
-Install dependencies:
+### Step 3: Install dependencies
 
 ```bash
 npm install
 ```
 
-Install Playwright Chromium:
+### Step 4: Install Playwright browsers
 
 ```bash
-npx playwright install chromium
+npx playwright install
 ```
 
-Create a `.env` file in the project root:
+### Step 5: Configure environment variables
+
+Create a `.env` file in the project root.
+
+Add the required configuration:
 
 ```env
-API_BASE_URL=https://api.restful-api.dev
+ORANGEHRM_BASE_URL=https://opensource-demo.orangehrmlive.com/web/index.php
+ORANGEHRM_CLIENT_ID=your_oauth_client_id
+ORANGEHRM_REDIRECT_URI=http://localhost:3000/callback
 ```
+
+Use your own valid OrangeHRM OAuth client configuration. Do not commit credentials or sensitive values to GitHub.
 
 ## Execution Commands
 
-Run all test cases:
+### Run all tests
 
 ```bash
-npm test
+npx playwright test
 ```
 
-Run tests in headed mode:
+### Run all tests in headed mode
 
 ```bash
-npm run test:headed
+npx playwright test --headed
 ```
 
-Run tests in debug mode:
+### Run the end-to-end lifecycle test
 
 ```bash
-npm run test:debug
+npx playwright test tests/e2e/employee-lifecycle.spec.js --headed
 ```
 
-Run a specific test file:
+### Run regression tests
 
 ```bash
-npx playwright test tests/01-employee-create.spec.js
+npx playwright test tests/regression
 ```
 
-## Test Execution Order
-
-The employee lifecycle tests use a generated Employee ID stored in `generatedEmployee.json`.
-
-Therefore, the employee tests should execute in the following order:
-
-1. Employee Creation
-2. Employee Search
-3. Employee Update
-4. Employee Deletion
-5. API CRUD
-6. Logout
-
-The Playwright configuration uses a single worker to execute tests sequentially.
-
-## Reporting
-
-The project uses the Playwright HTML Reporter.
-
-Generate the HTML report:
+### Run a specific regression test
 
 ```bash
-npm run test
+npx playwright test tests/regression/01-employee-create.spec.js --headed
 ```
 
-Open the report:
+### Run tests in debug mode
 
 ```bash
-npm run test:report
+npx playwright test --debug
 ```
 
-The configuration also captures:
+## Test Reports
 
-- Screenshots on test failure
-- Video recordings
-- Trace files on failure
+The project uses Playwright's HTML reporter.
 
-## Test Execution Result
+After execution, generate the report using:
 
-The complete test suite was executed successfully.
+```bash
+npx playwright show-report
+```
 
-**Latest execution: 6 tests passed.**
+The report provides:
 
-Scenarios covered:
+- Test execution status.
+- Passed and failed test cases.
+- Execution duration.
+- Error details.
+- Screenshots and traces when applicable.
 
-- Employee Creation
-- Employee Search
-- Employee Update
-- Employee Deletion
-- API CRUD Operations
-- Logout and Session Invalidation
+Screenshots are configured to be captured on test failure. Video recording is enabled in the Playwright configuration.
+
+## Playwright Configuration
+
+The framework configuration includes:
+
+- Chromium browser execution.
+- Headed browser execution.
+- Sequential test execution.
+- Configured test and assertion timeouts.
+- HTML reporting.
+- Screenshots on failure.
+- Video recording.
+- Trace retention on failure.
+
+## Current Test Execution Status
+
+**Latest verified result:** All 7 tests passed together and individually.
+
+The suite includes one integrated end-to-end employee lifecycle test and six regression tests.
+
+## Future Enhancements
+
+- Cross-browser execution (Chromium, Firefox, and WebKit).
+- CI/CD integration using GitHub Actions.
+- Enhanced API negative testing.
+- Additional employee management scenarios.
+- Improved test data cleanup and isolation.
 
 ## Author
 
-Sathya
+**Sathya**
 
-**Project:** OrangeHRM Employee Lifecycle Automation  
-**Automation Tool:** Playwright with JavaScript
+QA Automation Engineer
+
+**GitHub Repository:**  
+https://github.com/sathya-thinktime/OrangeHRM-Playwright-Automation

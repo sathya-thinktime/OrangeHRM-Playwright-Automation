@@ -6,7 +6,7 @@ class EmployeeListPage {
         this.page = page;
 
         // PIM navigation
-        this.pimMenu = page.getByText('PIM', { exact: true });
+        this.pimMenu = page.getByRole('link', { name: 'PIM' });
 
         this.employeeListMenu = page.locator('a').filter({
             hasText: 'Employee List'
@@ -62,7 +62,7 @@ class EmployeeListPage {
         await expect(employeeRow).toHaveCount(1);
     }
 
-    // Open employee record using Employee ID
+    // Open employee record and capture internal employee number
     async openEmployee(employeeId) {
         const employeeRow = this.resultRows.filter({
             hasText: employeeId
@@ -77,6 +77,25 @@ class EmployeeListPage {
         await expect(editButton).toBeVisible();
 
         await editButton.click();
+
+        // Wait for employee details page
+        await this.page.waitForURL(
+            /\/pim\/viewPersonalDetails\/empNumber\/\d+/,
+            { timeout: 15000 }
+        );
+
+        // Extract OrangeHRM internal employee number
+        const match = this.page.url().match(/empNumber\/(\d+)/);
+
+        if (!match) {
+            throw new Error('Unable to capture OrangeHRM empNumber');
+        }
+
+        const empNumber = match[1];
+
+        console.log('OrangeHRM Internal Employee Number:', empNumber);
+
+        return empNumber;
     }
 
     // Delete employee using Employee ID
@@ -87,7 +106,6 @@ class EmployeeListPage {
 
         await expect(employeeRow).toHaveCount(1);
 
-        // Locate the Delete button in the matching employee row
         const deleteButton = employeeRow
             .locator('.oxd-icon-button')
             .nth(1);

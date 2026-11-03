@@ -3,21 +3,23 @@ const { test } = require('@playwright/test');
 const path = require('path');
 const fs = require('fs');
 
-const { LoginPage } = require('../pages/LoginPage');
-const { EmployeePage } = require('../pages/EmployeePage');
-const { generateEmployeeId } = require('../utils/testDataGenerator');
+const { LoginPage } = require('../../pages/LoginPage');
+const { EmployeePage } = require('../../pages/EmployeePage');
+const { generateEmployeeId } = require('../../utils/testDataGenerator');
 
-const loginData = require('../test-data/loginData.json');
-const employeeData = require('../test-data/employeeData.json');
+const loginData = require('../../test-data/loginData.json');
+const employeeData = require('../../test-data/employeeData.json');
 
+// Updated asset path
 const imagePath = path.resolve(
     __dirname,
-    '../test-assets/Profile_pic.jpg'
+    '../../test-assets/Profile_pic.jpg'
 );
 
+// Updated generated employee data path
 const generatedDataPath = path.resolve(
     __dirname,
-    '../test-data/generatedEmployee.json'
+    '../../test-data/generatedEmployee.json'
 );
 
 test('Create an employee in OrangeHRM', async ({ page }) => {

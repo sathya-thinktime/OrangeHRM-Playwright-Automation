@@ -1,13 +1,13 @@
 
 const { test } = require('@playwright/test');
 
-const { LoginPage } = require('../pages/LoginPage');
-const { EmployeeListPage } = require('../pages/EmployeeListPage');
-const { EmployeeDetailsPage } = require('../pages/EmployeeDetailsPage');
+const { LoginPage } = require('../../pages/LoginPage');
+const { EmployeeListPage } = require('../../pages/EmployeeListPage');
+const { EmployeeDetailsPage } = require('../../pages/EmployeeDetailsPage');
 
-const loginData = require('../test-data/loginData.json');
-const generatedData = require('../test-data/generatedEmployee.json');
-const employeeData = require('../test-data/employeeData.json');
+const loginData = require('../../test-data/loginData.json');
+const generatedData = require('../../test-data/generatedEmployee.json');
+const employeeData = require('../../test-data/employeeData.json');
 
 test('Update employee job details', async ({ page }) => {
 
@@ -56,9 +56,9 @@ test('Update employee job details', async ({ page }) => {
     await employeeDetailsPage.saveChanges();
 
     await employeeDetailsPage.verifyUpdatedDetails(
-    employeeData.updatedEmployee.jobTitle,
-    employeeData.updatedEmployee.employmentStatus
-);
+        employeeData.updatedEmployee.jobTitle,
+        employeeData.updatedEmployee.employmentStatus
+    );
 
     console.log(
         'Employee job details updated successfully. Employee ID:',

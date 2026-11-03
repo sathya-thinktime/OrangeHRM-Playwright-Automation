@@ -1,9 +1,9 @@
 
 const { test, expect } = require('@playwright/test');
 
-const { LoginPage } = require('../pages/LoginPage');
+const { LoginPage } = require('../../pages/LoginPage');
 
-const loginData = require('../test-data/loginData.json');
+const loginData = require('../../test-data/loginData.json');
 
 test('Logout and verify session invalidation', async ({ page }) => {
 

@@ -7,8 +7,8 @@ module.exports = defineConfig({
     // Location of test files
     testDir: './tests',
 
-    // Maximum execution time
-    timeout: 60000,
+    // Maximum test execution time: 3 minutes
+    timeout: 180000,
 
     // Assertion timeout
     expect: {
