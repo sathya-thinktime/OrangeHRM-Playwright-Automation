@@ -6,7 +6,7 @@ class APIHelper {
     constructor(request) {
         this.request = request;
 
-        this.baseURL = process.env.ORANGEHRM_BASE_URL;
+        this.baseURL = new URL(process.env.ORANGEHRM_BASE_URL).origin;
         this.clientId = process.env.ORANGEHRM_CLIENT_ID;
         this.redirectURI = process.env.ORANGEHRM_REDIRECT_URI;
 
