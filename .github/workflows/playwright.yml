@@ -18,33 +18,42 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1. Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # 2. Setup Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: npm
 
+      # 3. Install dependencies
       - name: Install dependencies
         run: npm install
 
+      # 4. Install Playwright Chromium
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
+      # 5. Configure environment variables
       - name: Configure environment variables
         env:
           ORANGEHRM_CLIENT_ID: ${{ secrets.ORANGEHRM_CLIENT_ID }}
         run: |
           {
+            echo "BASE_URL=https://opensource-demo.orangehrmlive.com"
             echo "ORANGEHRM_BASE_URL=https://opensource-demo.orangehrmlive.com/web/index.php"
             echo "ORANGEHRM_CLIENT_ID=$ORANGEHRM_CLIENT_ID"
             echo "ORANGEHRM_REDIRECT_URI=http://localhost:3000/callback"
           } > .env
 
+      # 6. Run Playwright tests
       - name: Run Playwright tests
         run: npx playwright test
 
+      # 7. Upload Playwright HTML Report
       - name: Upload Playwright HTML Report
         if: always()
         uses: actions/upload-artifact@v4
@@ -53,6 +62,7 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
+      # 8. Upload Test Results
       - name: Upload Test Results
         if: always()
         uses: actions/upload-artifact@v4
