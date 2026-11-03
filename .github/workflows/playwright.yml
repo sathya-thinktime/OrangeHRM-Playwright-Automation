@@ -1,0 +1,62 @@
+
+name: OrangeHRM Playwright Automation
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+jobs:
+  playwright-tests:
+    name: Run Playwright Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Configure environment variables
+        env:
+          ORANGEHRM_CLIENT_ID: ${{ secrets.ORANGEHRM_CLIENT_ID }}
+        run: |
+          {
+            echo "ORANGEHRM_BASE_URL=https://opensource-demo.orangehrmlive.com/web/index.php"
+            echo "ORANGEHRM_CLIENT_ID=$ORANGEHRM_CLIENT_ID"
+            echo "ORANGEHRM_REDIRECT_URI=http://localhost:3000/callback"
+          } > .env
+
+      - name: Run Playwright tests
+        run: npx playwright test
+
+      - name: Upload Playwright HTML Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-html-report
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: test-results/
+          retention-days: 14
