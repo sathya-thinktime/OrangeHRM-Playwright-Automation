@@ -6,20 +6,35 @@ class APIHelper {
     constructor(request) {
         this.request = request;
 
-        const configuredBaseURL = process.env.ORANGEHRM_BASE_URL;
+        this.baseURL = process.env.ORANGEHRM_BASE_URL;
         this.clientId = process.env.ORANGEHRM_CLIENT_ID;
         this.redirectURI = process.env.ORANGEHRM_REDIRECT_URI;
 
-        if (!configuredBaseURL || !this.clientId || !this.redirectURI) {
+        if (!this.baseURL || !this.clientId || !this.redirectURI) {
             throw new Error(
                 'OrangeHRM OAuth environment variables are missing'
             );
         }
 
-        this.baseURL = new URL(configuredBaseURL).origin;
+        // Normalize base URL
+        this.baseURL = this.baseURL.replace(/\/+$/, '');
+
+        // Validate the application base path
+        const parsedBaseURL = new URL(this.baseURL);
+
+        if (parsedBaseURL.pathname.replace(/\/+$/, '') !== '/web/index.php') {
+            throw new Error(
+                `Invalid ORANGEHRM_BASE_URL: ${this.baseURL}. ` +
+                'Expected URL ending with /web/index.php'
+            );
+        }
+
         this.accessToken = null;
+
+        console.log('OrangeHRM configured base URL:', this.baseURL);
     }
 
+    // Generate PKCE code verifier and challenge
     generatePKCE() {
         const codeVerifier = crypto
             .randomBytes(32)
@@ -30,19 +45,33 @@ class APIHelper {
             .update(codeVerifier)
             .digest('base64url');
 
-        return { codeVerifier, codeChallenge };
+        return {
+            codeVerifier,
+            codeChallenge
+        };
     }
 
+    // Build URLs without losing /web/index.php
+    buildURL(endpoint) {
+        return `${this.baseURL}/${endpoint.replace(/^\/+/, '')}`;
+    }
+
+    // Authenticate with OrangeHRM and obtain access token
     async authorizeAndGetToken(page) {
         const { codeVerifier, codeChallenge } = this.generatePKCE();
+
         const state = crypto.randomBytes(16).toString('hex');
 
         let callbackServer;
 
         try {
+            // Start local OAuth callback server
             const authorizationCode = new Promise((resolve, reject) => {
                 callbackServer = http.createServer((req, res) => {
-                    const callbackURL = new URL(req.url, this.redirectURI);
+                    const callbackURL = new URL(
+                        req.url,
+                        this.redirectURI
+                    );
 
                     if (callbackURL.pathname !== '/callback') {
                         res.writeHead(404);
@@ -54,29 +83,43 @@ class APIHelper {
                         callbackURL.searchParams.get('state');
 
                     const code = callbackURL.searchParams.get('code');
+
                     const error = callbackURL.searchParams.get('error');
 
+                    // Validate OAuth state
                     if (returnedState !== state) {
                         res.writeHead(400);
                         res.end('Invalid OAuth state');
-                        reject(new Error('OAuth state validation failed'));
+
+                        reject(
+                            new Error('OAuth state validation failed')
+                        );
                         return;
                     }
 
+                    // Handle OAuth error
                     if (error) {
                         res.writeHead(400);
                         res.end('OAuth authorization failed');
-                        reject(new Error(`OAuth error: ${error}`));
+
+                        reject(
+                            new Error(`OAuth error: ${error}`)
+                        );
                         return;
                     }
 
+                    // Validate authorization code
                     if (!code) {
                         res.writeHead(400);
                         res.end('Authorization code not received');
-                        reject(new Error('Authorization code missing'));
+
+                        reject(
+                            new Error('Authorization code missing')
+                        );
                         return;
                     }
 
+                    // Send success response
                     res.writeHead(200, {
                         'Content-Type': 'text/html'
                     });
@@ -91,13 +134,16 @@ class APIHelper {
                 callbackServer.on('error', reject);
             });
 
+            // Wait until callback server is listening
             await new Promise((resolve, reject) => {
                 callbackServer.once('error', reject);
+
                 callbackServer.listen(3000, '127.0.0.1', resolve);
             });
 
+            // Construct authorization URL
             const authorizationURL = new URL(
-                `${this.baseURL}/oauth2/authorize`
+                this.buildURL('oauth2/authorize')
             );
 
             authorizationURL.searchParams.set('response_type', 'code');
@@ -109,11 +155,20 @@ class APIHelper {
 
             console.log('Opening OrangeHRM OAuth authorization page');
 
+            console.log(
+                'Authorization URL:',
+                authorizationURL.toString().replace(
+                    this.clientId,
+                    'REDACTED'
+                )
+            );
+
+            // Open authorization page
             await page.goto(authorizationURL.toString());
 
-            // Capture the actual page details for CI diagnosis
             await page.waitForLoadState('domcontentloaded');
 
+            // Diagnose OAuth page
             console.log('OAuth page URL:', page.url());
             console.log('OAuth page title:', await page.title());
 
@@ -124,7 +179,17 @@ class APIHelper {
                 pageText.substring(0, 3000)
             );
 
-            // Find and click consent button once
+            // Stop if OrangeHRM returns 404
+            if (
+                pageText.includes('The requested URL was not found') ||
+                (await page.title()).includes('404')
+            ) {
+                throw new Error(
+                    `OrangeHRM OAuth authorization URL returned 404: ${page.url()}`
+                );
+            }
+
+            // Find OAuth consent button
             const consentButton = page.getByRole('button', {
                 name: 'Allow Access'
             });
@@ -134,22 +199,27 @@ class APIHelper {
                 timeout: 15000
             });
 
+            // Grant OAuth access
             await consentButton.click();
 
             console.log('OAuth consent granted');
 
-            // Receive authorization code through callback
+            // Receive authorization code
             const code = await authorizationCode;
 
             console.log('Authorization code received');
 
             // Exchange authorization code for access token
+            const tokenURL = this.buildURL('oauth2/token');
+
+            console.log('Token endpoint:', tokenURL);
+
             const tokenResponse = await this.request.post(
-                `${this.baseURL}/oauth2/token`,
+                tokenURL,
                 {
                     form: {
                         grant_type: 'authorization_code',
-                        code,
+                        code: code,
                         client_id: this.clientId,
                         redirect_uri: this.redirectURI,
                         code_verifier: codeVerifier
@@ -159,7 +229,8 @@ class APIHelper {
 
             if (!tokenResponse.ok()) {
                 throw new Error(
-                    `Token request failed: ${tokenResponse.status()} - ${await tokenResponse.text()}`
+                    `Token request failed: ${tokenResponse.status()} - ` +
+                    `${await tokenResponse.text()}`
                 );
             }
 
@@ -178,6 +249,7 @@ class APIHelper {
             return this.accessToken;
 
         } finally {
+            // Close callback server
             if (callbackServer) {
                 await new Promise(resolve => {
                     callbackServer.close(resolve);
@@ -186,6 +258,7 @@ class APIHelper {
         }
     }
 
+    // Common authorization headers
     getHeaders() {
         if (!this.accessToken) {
             throw new Error(
@@ -199,24 +272,35 @@ class APIHelper {
         };
     }
 
+    // GET employee using internal employee number
     async getEmployee(empNumber) {
         return await this.request.get(
-            `${this.baseURL}/api/v2/pim/employees/${empNumber}`,
-            { headers: this.getHeaders() }
+            this.buildURL(`api/v2/pim/employees/${empNumber}`),
+            {
+                headers: this.getHeaders()
+            }
         );
     }
 
+    // GET employee job details
     async getEmployeeJobDetails(empNumber) {
         return await this.request.get(
-            `${this.baseURL}/api/v2/pim/employees/${empNumber}/job-details`,
-            { headers: this.getHeaders() }
+            this.buildURL(
+                `api/v2/pim/employees/${empNumber}/job-details`
+            ),
+            {
+                headers: this.getHeaders()
+            }
         );
     }
 
+    // GET employee list
     async getEmployees() {
         return await this.request.get(
-            `${this.baseURL}/api/v2/pim/employees`,
-            { headers: this.getHeaders() }
+            this.buildURL('api/v2/pim/employees'),
+            {
+                headers: this.getHeaders()
+            }
         );
     }
 }
