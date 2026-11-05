@@ -272,9 +272,48 @@ class APIHelper {
         };
     }
 
+    // Retry GET requests for temporary network failures
+    async getWithRetry(url, options = {}) {
+        const maxRetries = 3;
+
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                console.log(
+                    `API GET attempt ${attempt}/${maxRetries}: ${url}`
+                );
+
+                const response = await this.request.get(url, {
+                    ...options,
+                    timeout: 60000
+                });
+
+                return response;
+
+            } catch (error) {
+                const isNetworkError =
+                    /ECONNRESET|socket hang up|ETIMEDOUT|ECONNREFUSED/i
+                        .test(error.message);
+
+                if (!isNetworkError || attempt === maxRetries) {
+                    throw error;
+                }
+
+                console.warn(
+                    `API request failed on attempt ${attempt}: ${error.message}`
+                );
+
+                console.log('Retrying API request after 2 seconds...');
+
+                await new Promise(resolve =>
+                    setTimeout(resolve, 2000)
+                );
+            }
+        }
+    }
+
     // GET employee using internal employee number
     async getEmployee(empNumber) {
-        return await this.request.get(
+        return await this.getWithRetry(
             this.buildURL(`api/v2/pim/employees/${empNumber}`),
             {
                 headers: this.getHeaders()
@@ -284,7 +323,7 @@ class APIHelper {
 
     // GET employee job details
     async getEmployeeJobDetails(empNumber) {
-        return await this.request.get(
+        return await this.getWithRetry(
             this.buildURL(
                 `api/v2/pim/employees/${empNumber}/job-details`
             ),
@@ -296,7 +335,7 @@ class APIHelper {
 
     // GET employee list
     async getEmployees() {
-        return await this.request.get(
+        return await this.getWithRetry(
             this.buildURL('api/v2/pim/employees'),
             {
                 headers: this.getHeaders()

@@ -1,21 +1,38 @@
 
-const { test } = require('@playwright/test');
+const { test, expect } = require('@playwright/test');
+const fs = require('fs');
+const path = require('path');
 
 const { LoginPage } = require('../../pages/LoginPage');
 const { EmployeeListPage } = require('../../pages/EmployeeListPage');
 
 const loginData = require('../../test-data/loginData.json');
 
+const generatedDataPath = path.resolve(
+    __dirname,
+    '../../test-data/generatedEmployee.json'
+);
+
 test('Search and verify created employee', async ({ page }) => {
 
-    // Step 1: Load generated employee data
-    const generatedData = require('../../test-data/generatedEmployee.json');
+    test.setTimeout(120000);
 
-    // Step 2: Initialize Page Objects
+    // Load generated employee data after the Create test has run
+    if (!fs.existsSync(generatedDataPath)) {
+        throw new Error(
+            'generatedEmployee.json not found. Run the Employee Create test first.'
+        );
+    }
+
+    const generatedData = JSON.parse(
+        fs.readFileSync(generatedDataPath, 'utf8')
+    );
+
+    const employee = generatedData.employee;
+
     const loginPage = new LoginPage(page);
     const employeeListPage = new EmployeeListPage(page);
 
-    // Step 3: Login
     await page.goto('/');
 
     await loginPage.login(
@@ -25,22 +42,21 @@ test('Search and verify created employee', async ({ page }) => {
 
     await loginPage.verifyLoginSuccessful();
 
-    // Step 4: Navigate to Employee List
+    console.log('Login successful');
+
     await employeeListPage.navigateToEmployeeList();
 
-    // Step 5: Search using generated Employee ID
     await employeeListPage.searchEmployee(
-        generatedData.employee.employeeId
+        employee.employeeId
     );
 
-    // Step 6: Verify employee details
     await employeeListPage.verifyEmployeeDisplayed(
-        generatedData.employee.firstName,
-        generatedData.employee.lastName
+        employee.firstName,
+        employee.lastName
     );
 
     console.log(
         'Employee search successful. Employee ID:',
-        generatedData.employee.employeeId
+        employee.employeeId
     );
 });

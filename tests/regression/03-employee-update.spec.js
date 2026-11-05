@@ -1,26 +1,53 @@
 
-const { test } = require('@playwright/test');
+const { test, expect } = require('@playwright/test');
+const fs = require('fs');
+const path = require('path');
 
 const { LoginPage } = require('../../pages/LoginPage');
 const { EmployeeListPage } = require('../../pages/EmployeeListPage');
-const { EmployeeDetailsPage } = require('../../pages/EmployeeDetailsPage');
 
 const loginData = require('../../test-data/loginData.json');
 const employeeData = require('../../test-data/employeeData.json');
 
+const generatedDataPath = path.resolve(
+    __dirname,
+    '../../test-data/generatedEmployee.json'
+);
+
 test('Update employee job details', async ({ page }) => {
+    test.setTimeout(120000);
 
-    // Step 1: Load generated employee data
-    const generatedData = require('../../test-data/generatedEmployee.json');
+    // Verify generated employee data exists
+    if (!fs.existsSync(generatedDataPath)) {
+        throw new Error(
+            'generatedEmployee.json not found. Run the Employee Create test first.'
+        );
+    }
 
-    // Step 2: Initialize Page Objects
+    // Read generated employee details
+    const generatedData = JSON.parse(
+        fs.readFileSync(generatedDataPath, 'utf8')
+    );
+
+    const employeeId = generatedData.employee.employeeId;
+
+    // Validate update data
+    const jobTitle = employeeData.updatedEmployee.jobTitle;
+    const employmentStatus = employeeData.updatedEmployee.employmentStatus;
+
+    if (!jobTitle || !employmentStatus) {
+        throw new Error(
+            'Job title or employment status is missing in employeeData.json'
+        );
+    }
+
     const loginPage = new LoginPage(page);
     const employeeListPage = new EmployeeListPage(page);
-    const employeeDetailsPage = new EmployeeDetailsPage(page);
 
-    // Step 3: Login
+    // Navigate to OrangeHRM
     await page.goto('/');
 
+    // Login
     await loginPage.login(
         loginData.validUser.username,
         loginData.validUser.password
@@ -28,42 +55,32 @@ test('Update employee job details', async ({ page }) => {
 
     await loginPage.verifyLoginSuccessful();
 
-    // Step 4: Navigate to Employee List
+    console.log('Login successful');
+
+    // Navigate to Employee List
     await employeeListPage.navigateToEmployeeList();
 
-    // Step 5: Search using generated Employee ID
-    await employeeListPage.searchEmployee(
-        generatedData.employee.employeeId
-    );
+    // Search for the generated employee
+    await employeeListPage.searchEmployee(employeeId);
 
-    // Step 6: Open employee record
-    await employeeListPage.openEmployee(
-        generatedData.employee.employeeId
-    );
+    console.log('Employee found. Employee ID:', employeeId);
 
-    // Step 7: Open Job tab
-    await employeeDetailsPage.openJobTab();
-
-    // Step 8: Update Job Title
-    await employeeDetailsPage.updateJobTitle(
-        employeeData.updatedEmployee.jobTitle
-    );
-
-    // Step 9: Update Employment Status
-    await employeeDetailsPage.updateEmploymentStatus(
-        employeeData.updatedEmployee.employmentStatus
-    );
-
-    // Step 10: Save and verify changes
-    await employeeDetailsPage.saveChanges();
-
-    await employeeDetailsPage.verifyUpdatedDetails(
-        employeeData.updatedEmployee.jobTitle,
-        employeeData.updatedEmployee.employmentStatus
-    );
+    // Open employee record
+    const empNumber = await employeeListPage.openEmployee(employeeId);
 
     console.log(
-        'Employee job details updated successfully. Employee ID:',
-        generatedData.employee.employeeId
+        'Employee record opened. Internal Employee Number:',
+        empNumber
     );
+
+    // Update Job Details
+    await employeeListPage.updateJobDetails(
+        jobTitle,
+        employmentStatus
+    );
+
+    console.log('Employee job details updated successfully.');
+    console.log('Employee ID:', employeeId);
+    console.log('Updated Job Title:', jobTitle);
+    console.log('Updated Employment Status:', employmentStatus);
 });
